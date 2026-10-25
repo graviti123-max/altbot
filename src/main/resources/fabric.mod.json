@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "altbot",
+  "version": "${version}",
+  "name": "AltBot",
+  "description": "Panel HUD do logowania konta non-premium na serwerach, auto /register i /login oraz szybkie komendy.",
+  "authors": ["you"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["pl.altbot.AltBotClient"]
+  },
+  "mixins": ["altbot.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.17.3",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
