@@ -33,7 +33,7 @@ public final class AccountSwitcher {
 
         if (mc.level != null) {
             mc.level.disconnect(net.minecraft.network.chat.Component.literal("AltBot"));
-            mc.disconnect(new TitleScreen());
+            mc.disconnect(new TitleScreen(), false);
         }
         ConnectScreen.startConnecting(new TitleScreen(), mc, parsed, data, false, null);
     }
