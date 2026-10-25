@@ -1,27 +1,53 @@
-name: Build mod
+package pl.altbot;
 
-on:
-  push:
-  workflow_dispatch:
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.User;
+import net.minecraft.client.gui.screens.ConnectScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import pl.altbot.mixin.MinecraftAccessor;
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 9.2.0
-      - name: Build
-        run: gradle build --no-daemon
-      - name: Upload mod jar
-        uses: actions/upload-artifact@v4
-        with:
-          name: altbot-mod
-          path: |
-            build/libs/*.jar
-            !build/libs/*-sources.jar
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import java.util.UUID;
+
+/** Podmienia nick (konto offline) i laczy z serwerem. */
+public final class AccountSwitcher {
+    private static User originalUser;
+
+    private AccountSwitcher() {}
+
+    public static void connect(String address, String username) {
+        Minecraft mc = Minecraft.getInstance();
+        MinecraftAccessor acc = (MinecraftAccessor) mc;
+
+        if (originalUser == null) originalUser = acc.altbot$getUser();
+
+        UUID offlineUuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + username).getBytes(StandardCharsets.UTF_8));
+        User offline = new User(username, offlineUuid, "0", Optional.empty(), Optional.empty());
+        acc.altbot$setUser(offline);
+
+        ServerAddress parsed = ServerAddress.parseString(address);
+        ServerData data = new ServerData("AltBot", address, ServerData.Type.OTHER);
+
+        if (mc.level != null) {
+            mc.disconnect(new TitleScreen(), false);
+        }
+        ConnectScreen.startConnecting(new TitleScreen(), mc, parsed, data, false, null);
+    }
+
+    /** Przywraca oryginalne (premium) konto. */
+    public static void restoreOriginal() {
+        if (originalUser != null) {
+            ((MinecraftAccessor) Minecraft.getInstance()).altbot$setUser(originalUser);
+        }
+    }
+
+    public static void disconnect() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level != null) {
+            mc.disconnect(new TitleScreen(), false);
+        }
+    }
+}
